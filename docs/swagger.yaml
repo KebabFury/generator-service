@@ -45,4 +45,42 @@ paths:
       summary: Ping
       tags:
       - service
+  /python:
+    post:
+      consumes:
+      - text/plain
+      description: Generate python
+      parameters:
+      - description: Input text data
+        in: body
+        name: data
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Successfully generated python
+          schema:
+            type: string
+        "400":
+          description: Error occurred
+          schema:
+            type: string
+        "401":
+          description: Error occurred
+          schema:
+            type: string
+        "500":
+          description: Error occurred
+          schema:
+            type: string
+        "503":
+          description: Error occurred
+          schema:
+            type: string
+      summary: Generate python
+      tags:
+      - service
 swagger: "2.0"

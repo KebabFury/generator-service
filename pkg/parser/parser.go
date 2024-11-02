@@ -1,15 +1,16 @@
 package parser
 
 import (
+	"html/template"
 	"regexp"
 	"strings"
 )
 
 type Document struct {
-	Name     string    `json:"name,omitempty"`
-	Types    string    `json:"types,omitempty"`
-	Models   string    `json:"models,omitempty"`
-	ApiCalls []ApiCall `json:"api_calls,omitempty"`
+	Name     string        `json:"name,omitempty"`
+	Types    template.HTML `json:"types,omitempty"`
+	Models   template.HTML `json:"models,omitempty"`
+	ApiCalls []ApiCall     `json:"api_calls,omitempty"`
 }
 
 type ApiCall struct {
@@ -35,11 +36,11 @@ func ParseDocument(documentStr string) *Document {
 	lines := strings.Split(documentStr, "\n")
 
 	typingHints := typeHintsRe.FindStringSubmatch(documentStr)
-	document.Types = typingHints[1]
+	document.Types = template.HTML(typingHints[1])
 
 	models := modelsRe.FindStringSubmatch(documentStr)
 
-	document.Models = models[1]
+	document.Models = template.HTML(models[1])
 
 	var calls []ApiCall
 	apiCall := ApiCall{}

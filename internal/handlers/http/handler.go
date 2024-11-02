@@ -1,11 +1,14 @@
 package http
 
 import (
+	"bytes"
 	"github.com/KebabFury/generator-service/internal/services"
 	"github.com/KebabFury/generator-service/pkg/parser"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/swagger"
+	"io"
+	"net/http"
 )
 
 type Handler struct {
@@ -24,7 +27,9 @@ func (h *Handler) Init(app *fiber.App) {
 	api.Get("/swagger/*", swagger.HandlerDefault) // default
 
 	api.Get("/ping", h.Ping)
-	api.Get("/generate", h.GeneratePython)
+	api.Post("/python", h.GeneratePython)
+	api.Post("/generate", h.GeneratePythonHtml)
+	api.Post("/register", h.RegisterProvider)
 }
 
 // Ping
@@ -46,7 +51,32 @@ func (h *Handler) Ping(c *fiber.Ctx) error {
 	})
 }
 
+// GeneratePython
+// @Summary Generate python
+// @Tags service
+// @Description Generate python
+// @ModuleID 3
+// @Accept text/plain
+// @Param data body string true "Input text data"
+// @Produce text/plain
+// @Success 200 {string} string "Successfully generated python"
+// @Failure 400,401,500,503 {string} string "Error occurred"
+// @Router /python [post]
 func (h *Handler) GeneratePython(c *fiber.Ctx) error {
+	resp, err := http.DefaultClient.Post("http://localhost:8000/api/generate", "text/plain", bytes.NewReader(c.BodyRaw()))
+	if err != nil {
+		return err
+	}
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	match := preRe.FindStringSubmatch(string(body))
+	return c.SendString(match[1])
+}
+
+func (h *Handler) GeneratePythonHtml(c *fiber.Ctx) error {
 	return c.Render("actions", parser.ParseDocument(string(c.Body())))
 }

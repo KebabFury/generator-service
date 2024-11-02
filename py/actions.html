@@ -46,9 +46,8 @@ def {{.Name}}(
     # Логика вызова API Todoist для создания задачи
     response = requests.post(
         "https://our_back/provider/{{.Name}}",
-        headers={"Authorization": "Bearer our_back_token"},
+        headers={"Authorization": f"Bearer {authorization_data['Todoist']}"},
         json={
-            "provider_back_token": authorization_data['Todoist']
             {{ range .Parameters }}"{{ .Name }}": {{ .Name }},
             {{ end }}
         },
