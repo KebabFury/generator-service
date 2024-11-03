@@ -6,11 +6,15 @@ import (
 	"github.com/getkin/kin-openapi/openapi2"
 	"github.com/getkin/kin-openapi/openapi2conv"
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"html/template"
 	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -67,16 +71,20 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if err := cmd.Run(); err != nil {
+	err = cmd.Run()
+	if err != nil {
 		fmt.Println("Ошибка при выполнении команды:", err)
-		panic(err)
+		//panic(err)
 	} else {
 		fmt.Println("Команда выполнена успешно.")
 	}
 
-	pythonFile, err := os.ReadFile("./tmp/models.py")
-	if err != nil {
-		panic(err)
+	var pythonFile []byte
+	if err == nil {
+		pythonFile, err = os.ReadFile("./tmp/models.py")
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// NEEDS TO DO NOT OPTIONAL PROPS
@@ -92,9 +100,8 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	})
 
 	schemas := s.ParseSchemaMap(pythonFileContent)
-	parseDocument := Document{
-		Models: template.HTML(pythonFileContent[getFirstClassRe.FindStringIndex(pythonFileContent)[0]:]),
-	}
+	initialSchemas := schemas
+	parseDocument := Document{}
 	for path, pathItem := range openapi3Spec.Paths.Map() {
 
 		operations := map[string]*openapi3.Operation{}
@@ -131,13 +138,14 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 			}
 
 			if operation.RequestBody != nil {
-				bodyParams := s.ParseRequestBody(schemas, operation.RequestBody.Value)
+				bodyType, bodyParams := s.ParseRequestBody(operation.OperationID, schemas, operation.RequestBody.Value)
+				apiCall.BodyType = bodyType
 				for _, param := range bodyParams {
 					apiCall.Parameters = append(apiCall.Parameters, param)
 				}
 			}
 
-			ressponse := s.ParseResponse(schemas, operation.Responses)
+			ressponse := s.ParseResponse(operation.OperationID, schemas, operation.Responses)
 			for _, parameter := range ressponse {
 				apiCall.Returns = append(apiCall.Returns, parameter)
 			}
@@ -146,6 +154,25 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 
 	}
 
+	modelBlock := ""
+
+	if len(pythonFileContent) > 0 {
+		modelBlock = pythonFileContent[getFirstClassRe.FindStringIndex(pythonFileContent)[0]:]
+	}
+	keys := make([]string, 0, len(schemas))
+
+	for k := range schemas {
+		if _, ok := initialSchemas[k]; !ok {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for i := len(keys) - 1; i >= 0; i-- {
+		modelBlock += schemas[keys[i]].GeneratePythonModel(keys[i])
+
+	}
+	parseDocument.Models = template.HTML(modelBlock)
 	//kk, err := json.Marshal(parseDocument)
 	//if err != nil {
 	//	panic(err)
@@ -163,8 +190,10 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	return &parseDocument
 }
 
+var breaksRe = regexp.MustCompile("(?m)(?:\n)|(?:<br>)")
 var classRe = regexp.MustCompile(`(?m)^class (.*)\(BaseModel\):$`)
 var propNameRe = regexp.MustCompile(`(?m)([a-zA-Z_-]*):`)
+var typeRe = regexp.MustCompile(`(?m)(?::\s*([a-zA-Z\-_\]\[0-9]*)\s?)`)
 var paramRe = regexp.MustCompile(`(?mU)([a-z]*)='(.*)'`)
 
 func (s *SwaggerParser) ParseSchemaMap(fileContents string) map[string]Schema {
@@ -195,13 +224,19 @@ func (s *SwaggerParser) ParseSchemaMap(fileContents string) map[string]Schema {
 		}
 		name := nameMatch[1]
 
-		typeMatch := pythonModelsFixRe.FindStringSubmatch(line)
+		typeMatch := typeRe.FindStringSubmatch(line)
+
 		if len(typeMatch) == 0 {
 			continue
 		}
 		t := typeMatch[1]
+		if strings.HasPrefix(t, "Optional[") {
+			t = strings.TrimPrefix(t, "Optional[")
+			t = t[:len(t)-1]
+		}
 		description := ""
 		for _, match := range paramRe.FindAllStringSubmatch(line, -1) {
+			fmt.Println(match)
 			if match[1] == "description" {
 				description = match[2]
 				break
@@ -240,7 +275,7 @@ func (s *SwaggerParser) ParseParameter(operationId string, parameter *openapi3.P
 		response.Annotated = parseAnnotated(operationId, parameter)
 		response.Parameter.Type = response.Annotated.Type
 	}
-	response.Parameter.Name = parameter.Name
+	response.Parameter.Name = fixReservedWords(parameter.Name)
 	response.Parameter.In = parameter.In
 	response.Parameter.Description = parameter.Description
 	return response
@@ -263,6 +298,8 @@ func parseType(schema *openapi3.Schema) string {
 		return "str"
 	case "integer":
 		return "int"
+	case "boolean":
+		return "bool"
 	case "array":
 		return fmt.Sprintf("List[%s]", parseType(schema.Items.Value))
 	}
@@ -274,34 +311,49 @@ type Schema struct {
 	Props []Parameter
 }
 
-func (s *SwaggerParser) ParseRequestBody(parsedSchemas map[string]Schema, body *openapi3.RequestBody) []Parameter {
-	bodyReq := body.Content.Get("application/json")
-	if bodyReq == nil {
-		return []Parameter{}
-	}
-	if bodyReq.Schema.Ref != "" {
-		schemaName := strings.Split(bodyReq.Schema.Ref, "/")[3]
-		schema, ok := parsedSchemas[schemaName]
-		if !ok {
-			return []Parameter{}
-		}
-		return schema.Props
-	}
-	types := *bodyReq.Schema.Value.Type
-	switch types[0] {
-	case "array":
-		schemaName := strings.Split(bodyReq.Schema.Value.Items.Ref, "/")[3]
-		schema, ok := parsedSchemas[schemaName]
-		if !ok {
-			return []Parameter{}
-		}
-		return schema.Props
+func (s Schema) GeneratePythonModel(name string) string {
+	if len(s.Props) == 0 {
+		return ""
 	}
 
-	return []Parameter{}
+	m := "class " + name + "(BaseModel):\n"
+	for _, prop := range s.Props {
+		if prop.Name == "" || prop.Type == "" {
+			continue
+		}
+		typeForField := prop.Type
+		if strings.HasPrefix(prop.Type, "Optional[") {
+			typeForField = "None"
+		}
+		m += "\t" + prop.Name + ": " + prop.Type + " = Field(" + typeForField + ", description=" + strconv.Quote(breaksRe.ReplaceAllString(prop.Description, "")) + ")\n"
+	}
+
+	return m
 }
 
-func (s *SwaggerParser) ParseResponse(parsedSchemas map[string]Schema, response *openapi3.Responses) []Parameter {
+func (s *SwaggerParser) ParseRequestBody(operationId string, parsedSchemas map[string]Schema, body *openapi3.RequestBody) (string, []Parameter) {
+	mimeType := ""
+	bodyReq := body.Content.Get("application/json")
+	for t, mediaType := range body.Content {
+		bodyReq = mediaType
+		mimeType = t
+		// TODO: add support for multiple content
+		break
+	}
+	if bodyReq == nil {
+		return mimeType, []Parameter{}
+	}
+
+	s.ParseSchema(operationId, false, "", "Body", bodyReq.Schema, parsedSchemas)
+
+	props := parsedSchemas[operationId+"Body"].Props
+	for i := 0; i < len(props); i++ {
+		props[i].In = "body"
+	}
+	return mimeType, props
+}
+
+func (s *SwaggerParser) ParseResponse(operationId string, parsedSchemas map[string]Schema, response *openapi3.Responses) []Parameter {
 	resp := response.Status(200)
 	if resp == nil {
 		return []Parameter{}
@@ -331,4 +383,70 @@ func (s *SwaggerParser) ParseResponse(parsedSchemas map[string]Schema, response 
 	}
 
 	return []Parameter{}
+}
+
+var caser = cases.Title(language.Und)
+
+func (s *SwaggerParser) ParseSchema(operationId string, required bool, parentPn string, pn string, schema *openapi3.SchemaRef, schemas map[string]Schema) {
+	if schema.Ref != "" {
+		tmp := schemas[operationId+parentPn]
+		tmp.Props = append(tmp.Props, Parameter{Name: fixReservedWords(pn), Type: operationId + parentPn + caser.String(pn), Description: strings.Trim(strconv.Quote(breaksRe.ReplaceAllString(schema.Value.Description, "")), "\"")})
+		schemas[operationId+parentPn] = tmp
+		schemas[operationId+parentPn+caser.String(pn)] = schemas[strings.Split(schema.Ref, "/")[3]]
+		return
+	}
+
+	schemaType := *schema.Value.Type
+	switch schemaType[0] {
+	case "object":
+		requiredMap := map[string]struct{}{}
+		for _, requiredProp := range schema.Value.Required {
+			requiredMap[requiredProp] = struct{}{}
+		}
+		schemas[operationId+parentPn+caser.String(pn)] = Schema{}
+		for propName, prop := range schema.Value.Properties {
+			if parentPn != "" {
+				tmp := schemas[operationId+parentPn]
+
+				typ := "Optional[" + operationId + parentPn + caser.String(pn) + "]"
+				// TODO: FIX THIS BUG
+				if !required {
+					typ = operationId + parentPn + caser.String(pn)
+				}
+				tmp.Props = append(tmp.Props, Parameter{Name: fixReservedWords(pn), Type: typ, Description: strings.Trim(strconv.Quote(breaksRe.ReplaceAllString(schema.Value.Description, "")), "\"")})
+				schemas[operationId+parentPn] = tmp
+			}
+
+			_, ok := requiredMap[propName]
+			s.ParseSchema(operationId, ok, parentPn+caser.String(pn), propName, prop, schemas)
+		}
+	case "integer":
+		fallthrough
+	case "string":
+		mainTyp := fmt.Sprintf(`Annotated[%s, Field(%s, description="%s")]`, parseType(schema.Value), parseType(schema.Value), strings.Trim(strconv.Quote(breaksRe.ReplaceAllString(schema.Value.Description, "")), "\""))
+		typ := "Optional[" + mainTyp + "]"
+		if required {
+			typ = mainTyp
+		}
+		tmp := schemas[operationId+parentPn]
+		tmp.Props = append(tmp.Props, Parameter{
+			Name: fixReservedWords(pn),
+			Type: typ,
+		})
+
+		schemas[operationId+parentPn] = tmp
+	}
+}
+
+var reservedWords = map[string]struct{}{
+	"from":   {},
+	"import": {},
+	"as":     {},
+}
+
+func fixReservedWords(s string) string {
+	if _, ok := reservedWords[s]; ok {
+		return s + "_"
+	}
+	return s
 }

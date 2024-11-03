@@ -22,6 +22,7 @@ type ApiCall struct {
 	Type           string      `json:"type,omitempty"`
 	Method         string      `json:"method,omitempty"`
 	Url            string      `json:"url,omitempty"`
+	BodyType       string      `json:"bodyType,omitempty"`
 	Name           string      `json:"name,omitempty" json:"name,omitempty"`
 	Description    string      `json:"description,omitempty" json:"description,omitempty"`
 	Parameters     []Parameter `json:"parameters,omitempty" json:"parameters,omitempty"`
