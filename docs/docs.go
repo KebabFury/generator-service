@@ -19,7 +19,7 @@ const docTemplate = `{
             "post": {
                 "description": "Parse swagger to doc and python",
                 "consumes": [
-                    "text/plain"
+                    "application/json"
                 ],
                 "produces": [
                     "text/plain"
@@ -37,12 +37,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Input text data",
+                        "description": "Request",
                         "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/http.ParseRequest"
                         }
                     }
                 ],
@@ -129,6 +129,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "http.ParseRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "string"
+                }
+            }
+        },
         "responses.PingResponse": {
             "type": "object",
             "properties": {

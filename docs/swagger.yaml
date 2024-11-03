@@ -1,5 +1,10 @@
 basePath: /api
 definitions:
+  http.ParseRequest:
+    properties:
+      data:
+        type: string
+    type: object
   responses.PingResponse:
     properties:
       message:
@@ -17,7 +22,7 @@ paths:
   /parse:
     post:
       consumes:
-      - text/plain
+      - application/json
       description: Parse swagger to doc and python
       parameters:
       - description: Provider name
@@ -25,12 +30,12 @@ paths:
         name: provider
         required: true
         type: string
-      - description: Input text data
+      - description: Request
         in: body
         name: data
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/http.ParseRequest'
       produces:
       - text/plain
       responses:
