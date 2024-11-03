@@ -1,8 +1,8 @@
 FROM golang:1.22-alpine
 WORKDIR /src
 
-RUN apk add --no-cache make python3 py3-pip
-RUN pip install -r requirements.txt
+RUN apk add --no-cache make python3 pipx
+RUN pipx install datamodel-code-generator
 ENV GOMODCACHE=/root/.cache/go-mod
 ENV GOCACHE=/root/.cache/go-build
 RUN apk add --no-cache make

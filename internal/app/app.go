@@ -17,7 +17,7 @@ import (
 // @title API
 // @version 1.0
 // @description API
-// @host localhost:8000
+// @host generator-inno.poezd.xyz
 // @BasePath /api
 // Run initializes whole application.
 func Run() {
