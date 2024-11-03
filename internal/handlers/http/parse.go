@@ -19,7 +19,7 @@ import (
 // @Produce text/plain
 // @Success 200 {string} string "Successfully generated python"
 // @Failure 400,401,500,503 {string} string "Error occurred"
-// @Router /python [post]
+// @Router /parse [post]
 func (h *Handler) Parse(c *fiber.Ctx) error {
 
 	swagParser := parser.NewSwaggerParser()

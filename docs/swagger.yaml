@@ -14,38 +14,7 @@ info:
   title: API
   version: "1.0"
 paths:
-  /ping:
-    get:
-      consumes:
-      - application/json
-      description: Ping
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/responses.PingResponse'
-        "400":
-          description: Bad Request
-          schema:
-            type: "null"
-        "401":
-          description: Unauthorized
-          schema:
-            type: "null"
-        "500":
-          description: Internal Server Error
-          schema:
-            type: "null"
-        "503":
-          description: Service Unavailable
-          schema:
-            type: "null"
-      summary: Ping
-      tags:
-      - service
-  /python:
+  /parse:
     post:
       consumes:
       - text/plain
@@ -86,6 +55,37 @@ paths:
           schema:
             type: string
       summary: Parse swagger to doc and python
+      tags:
+      - service
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Ping
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.PingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: "null"
+        "401":
+          description: Unauthorized
+          schema:
+            type: "null"
+        "500":
+          description: Internal Server Error
+          schema:
+            type: "null"
+        "503":
+          description: Service Unavailable
+          schema:
+            type: "null"
+      summary: Ping
       tags:
       - service
 swagger: "2.0"
