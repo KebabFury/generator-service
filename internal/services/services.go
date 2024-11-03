@@ -1,13 +1,16 @@
 package services
 
-import "github.com/KebabFury/generator-service/internal/config"
+import (
+	"github.com/KebabFury/generator-service/internal/config"
+	"github.com/KebabFury/generator-service/internal/domain"
+)
 
 type Services struct {
 	Agnia AgniaService
 }
 
 type AgniaService interface {
-	RegisterProvider(provider string, document string, pythonFileContents string)
+	RegisterProviders(providers []domain.Provider)
 }
 
 func NewServices(agnia config.AgniaConfig) *Services {

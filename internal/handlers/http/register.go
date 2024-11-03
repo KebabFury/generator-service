@@ -1,8 +1,8 @@
 package http
 
 import (
-	"bytes"
-	"github.com/KebabFury/generator-service/pkg/parser"
+	"encoding/json"
+	"github.com/KebabFury/generator-service/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
@@ -13,7 +13,8 @@ var preRe = regexp.MustCompile(`(?miU)<pre>((?:.|\n)+)<\/pre>`)
 
 func (h *Handler) RegisterProvider(c *fiber.Ctx) error {
 
-	resp, err := http.DefaultClient.Post("http://localhost:8000/api/generate", "text/plain", bytes.NewReader(c.BodyRaw()))
+	var providers []domain.Provider
+	resp, err := http.DefaultClient.Get("http://91.197.98.50:5243/provider/list-docs")
 	if err != nil {
 		return err
 	}
@@ -23,11 +24,12 @@ func (h *Handler) RegisterProvider(c *fiber.Ctx) error {
 		return err
 	}
 
-	match := preRe.FindStringSubmatch(string(body))
+	err = json.Unmarshal(body, &providers)
+	if err != nil {
+		return err
+	}
 
-	pythonFile := match[1]
+	h.services.Agnia.RegisterProviders(providers)
 
-	h.services.Agnia.RegisterProvider(c.Query("provider"), string(c.Body()), pythonFile)
-
-	return c.Render("actions", parser.ParseDocument(string(c.Body())))
+	return c.SendStatus(2000)
 }

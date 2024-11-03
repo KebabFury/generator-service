@@ -50,7 +50,7 @@ def {{.Name}}(
     # Логика вызова API Todoist для создания задачи
     response = requests.post(
          {{if eq .Type "custom"}}
-        "http://91.197.98.50:5243/{{$PROVIDER}}/handler",
+        "http://91.197.98.50:5243/provider/handle-provider-endpoint",
         {{ else }}
          "http://91.197.98.50:5243/{{$PROVIDER}}/{{.Name}}",
         {{ end }}

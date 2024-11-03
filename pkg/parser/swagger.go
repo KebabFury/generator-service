@@ -364,33 +364,24 @@ func (s *SwaggerParser) ParseResponse(operationId string, parsedSchemas map[stri
 		return []Parameter{}
 	}
 
-	if content.Schema.Ref != "" {
-		schemaName := strings.Split(content.Schema.Ref, "/")[3]
-		return []Parameter{
-			{Name: schemaName, Type: schemaName},
-		}
-	}
-	if content.Schema.Value.Type == nil {
-		return []Parameter{}
-	}
-	types := *content.Schema.Value.Type
-	switch types[0] {
-	case "array":
-		schemaName := strings.Split(content.Schema.Value.Items.Ref, "/")[3]
-		return []Parameter{
-			{Name: schemaName, Type: "List[" + schemaName + "]"},
-		}
-	}
+	s.ParseSchema(operationId, false, "", "Response", content.Schema, parsedSchemas)
 
-	return []Parameter{}
+	return parsedSchemas[operationId+"Response"].Props
 }
 
 var caser = cases.Title(language.Und)
 
 func (s *SwaggerParser) ParseSchema(operationId string, required bool, parentPn string, pn string, schema *openapi3.SchemaRef, schemas map[string]Schema) {
 	if schema.Ref != "" {
-		tmp := schemas[operationId+parentPn]
-		tmp.Props = append(tmp.Props, Parameter{Name: fixReservedWords(pn), Type: operationId + parentPn + caser.String(pn), Description: strings.Trim(strconv.Quote(breaksRe.ReplaceAllString(schema.Value.Description, "")), "\"")})
+		tmp, ok := schemas[operationId+parentPn]
+		if !ok {
+			tmp = Schema{}
+		}
+		description := ""
+		if schema.Value != nil {
+			description = strings.Trim(strconv.Quote(breaksRe.ReplaceAllString(schema.Value.Description, "")), "\"")
+		}
+		tmp.Props = append(tmp.Props, Parameter{Name: fixReservedWords(pn), Type: operationId + parentPn + caser.String(pn), Description: description})
 		schemas[operationId+parentPn] = tmp
 		schemas[operationId+parentPn+caser.String(pn)] = schemas[strings.Split(schema.Ref, "/")[3]]
 		return
