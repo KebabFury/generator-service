@@ -30,7 +30,6 @@ func (h *Handler) Init(app *fiber.App) {
 	api.Post("/python", h.GeneratePython)
 	api.Post("/generate", h.GeneratePythonHtml)
 	api.Post("/register", h.RegisterProvider)
-	api.Post("/parse", h.Parse)
 	api.Post("/parse/body", h.ParseFromBody)
 
 }
@@ -72,5 +71,6 @@ func (h *Handler) GeneratePython(c *fiber.Ctx) error {
 func (h *Handler) GeneratePythonHtml(c *fiber.Ctx) error {
 	doc := parser.ParseDocument(string(c.Body()))
 	doc.Provider = c.Query("provider")
+	doc.Description = c.Query("description")
 	return c.Render("actions", doc)
 }

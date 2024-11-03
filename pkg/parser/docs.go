@@ -16,6 +16,7 @@ func DocumentToMarkdown(doc *Document) string {
 		markdown += "// TYPE: " + call.Type + "\n"
 		markdown += "// URL: " + call.Url + "\n"
 		markdown += "// METHOD: " + call.Method + "\n"
+		markdown += "// BODY_TYPE: " + call.BodyType + "\n"
 		markdown += "**Description**:\n"
 		markdown += call.Description + "\n\n"
 		if len(call.Parameters) > 0 {

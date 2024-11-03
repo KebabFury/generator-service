@@ -183,10 +183,10 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	//	panic(err)
 	//}
 	//
-	//err = os.WriteFile("do.md", []byte(DocumentToMarkdown(&parseDocument)), 0644)
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = os.WriteFile("do.md", []byte(DocumentToMarkdown(&parseDocument)), 0644)
+	if err != nil {
+		panic(err)
+	}
 	return &parseDocument
 }
 

@@ -9,11 +9,12 @@ import (
 )
 
 type Document struct {
-	Name     string        `json:"name,omitempty"`
-	Types    template.HTML `json:"types,omitempty"`
-	Models   template.HTML `json:"models,omitempty"`
-	ApiCalls []ApiCall     `json:"api_calls,omitempty"`
-	Provider string
+	Name        string        `json:"name,omitempty"`
+	Types       template.HTML `json:"types,omitempty"`
+	Models      template.HTML `json:"models,omitempty"`
+	ApiCalls    []ApiCall     `json:"api_calls,omitempty"`
+	Provider    string
+	Description string
 }
 
 const ApiCallTypeCustom = "custom"
@@ -128,6 +129,11 @@ func ParseDocument(documentStr string) *Document {
 		}
 		if strings.HasPrefix(line, "// METHOD: ") {
 			apiCall.Method = strings.TrimPrefix(line, "// METHOD: ")
+			continue
+		}
+
+		if strings.HasPrefix(line, "// BODY_TYPE: ") {
+			apiCall.BodyType = strings.TrimPrefix(line, "// BODY_TYPE: ")
 			continue
 		}
 		if strings.HasPrefix(line, "// TYPE: ") {

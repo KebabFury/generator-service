@@ -29,9 +29,10 @@ authorization_data = {}
 
 {{ .Models }}
 {{ $PROVIDER := .Provider }}
+{{ $SYSTEM_DESC := .Description}}
 {{ range .ApiCalls }}
 @register_action(
-    system_type="task_tracker",
+    system_type="custom_system",
     include_in_plan=True,  # Действие может быть использовано в плане
     signature="({{ range .Parameters }} {{ .Name }}: {{ .TypeQuote }} = None, {{ end }}) -> {{.FormatedReturn}}",
     arguments=[
@@ -39,6 +40,8 @@ authorization_data = {}
        {{ end }}
     ],
     description="{{.Description}}",
+    sys_name="{{$PROVIDER}}",
+    sys_specific_description="{{$SYSTEM_DESC}}"
 )
 def {{.Name}}(
     {{ range .Parameters }}{{ .Name }}: {{ .TypeHtml }} = None,
@@ -59,7 +62,8 @@ def {{.Name}}(
             "body": "{" + f"{{.BodyParameters}}" + "}",
             "path": "{" + f"{{.PathParameters}}" + "}",
             "method": "{{.Method}}",
-            "url": "{{.Url}}"
+            "url": "{{.Url}}",
+            "bodyType": "{{.BodyType}}",
             {{else}}
             {{ range .Parameters }}"{{ .Name }}": {{ .Name }},
             {{ end }}

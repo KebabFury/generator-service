@@ -15,71 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/parse": {
-            "post": {
-                "description": "Parse swagger to doc and python",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "service"
-                ],
-                "summary": "Parse swagger to doc and python",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Provider name",
-                        "name": "provider",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "Request",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.ParseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully generated python",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "503": {
-                        "description": "Error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/parse/body": {
             "post": {
                 "description": "ParseFromBody swagger to doc and python",
@@ -98,6 +33,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Provider name",
                         "name": "provider",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Provider description",
+                        "name": "description",
                         "in": "query",
                         "required": true
                     },
@@ -194,14 +136,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "http.ParseRequest": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "string"
-                }
-            }
-        },
         "responses.PingResponse": {
             "type": "object",
             "properties": {

@@ -1,10 +1,5 @@
 basePath: /api
 definitions:
-  http.ParseRequest:
-    properties:
-      data:
-        type: string
-    type: object
   responses.PingResponse:
     properties:
       message:
@@ -19,49 +14,6 @@ info:
   title: API
   version: "1.0"
 paths:
-  /parse:
-    post:
-      consumes:
-      - application/json
-      description: Parse swagger to doc and python
-      parameters:
-      - description: Provider name
-        in: query
-        name: provider
-        required: true
-        type: string
-      - description: Request
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/http.ParseRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully generated python
-          schema:
-            type: string
-        "400":
-          description: Error occurred
-          schema:
-            type: string
-        "401":
-          description: Error occurred
-          schema:
-            type: string
-        "500":
-          description: Error occurred
-          schema:
-            type: string
-        "503":
-          description: Error occurred
-          schema:
-            type: string
-      summary: Parse swagger to doc and python
-      tags:
-      - service
   /parse/body:
     post:
       consumes:
@@ -71,6 +23,11 @@ paths:
       - description: Provider name
         in: query
         name: provider
+        required: true
+        type: string
+      - description: Provider description
+        in: query
+        name: description
         required: true
         type: string
       - description: Input text data
