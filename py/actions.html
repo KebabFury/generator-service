@@ -50,9 +50,9 @@ def {{.Name}}(
     # Логика вызова API Todoist для создания задачи
     response = requests.post(
          {{if eq .Type "custom"}}
-        "https://our_back/{{$PROVIDER}}/handler",
+        "http://91.197.98.50:5243/{{$PROVIDER}}/handler",
         {{ else }}
-         "https://our_back/{{$PROVIDER}}/{{.Name}}",
+         "http://91.197.98.50:5243/{{$PROVIDER}}/{{.Name}}",
         {{ end }}
         headers={"Authorization": f"Bearer {authorization_data['{{$PROVIDER}}']}"},
         json={
