@@ -37,7 +37,7 @@ paths:
         schema:
           $ref: '#/definitions/http.ParseRequest'
       produces:
-      - text/plain
+      - application/json
       responses:
         "200":
           description: Successfully generated python
@@ -60,6 +60,49 @@ paths:
           schema:
             type: string
       summary: Parse swagger to doc and python
+      tags:
+      - service
+  /parse/body:
+    post:
+      consumes:
+      - application/json
+      description: ParseFromBody swagger to doc and python
+      parameters:
+      - description: Provider name
+        in: query
+        name: provider
+        required: true
+        type: string
+      - description: Input text data
+        in: body
+        name: data
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Successfully generated python
+          schema:
+            type: string
+        "400":
+          description: Error occurred
+          schema:
+            type: string
+        "401":
+          description: Error occurred
+          schema:
+            type: string
+        "500":
+          description: Error occurred
+          schema:
+            type: string
+        "503":
+          description: Error occurred
+          schema:
+            type: string
+      summary: ParseFromBody swagger to doc and python
       tags:
       - service
   /ping:

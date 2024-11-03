@@ -31,6 +31,8 @@ func (h *Handler) Init(app *fiber.App) {
 	api.Post("/generate", h.GeneratePythonHtml)
 	api.Post("/register", h.RegisterProvider)
 	api.Post("/parse", h.Parse)
+	api.Post("/parse/body", h.ParseFromBody)
+
 }
 
 // Ping
