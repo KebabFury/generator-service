@@ -30,6 +30,7 @@ func (h *Handler) Init(app *fiber.App) {
 	api.Post("/python", h.GeneratePython)
 	api.Post("/generate", h.GeneratePythonHtml)
 	api.Post("/register", h.RegisterProvider)
+	api.Post("/parse", h.Parse)
 }
 
 // Ping
@@ -51,17 +52,6 @@ func (h *Handler) Ping(c *fiber.Ctx) error {
 	})
 }
 
-// GeneratePython
-// @Summary Generate python
-// @Tags service
-// @Description Generate python
-// @ModuleID 3
-// @Accept text/plain
-// @Param data body string true "Input text data"
-// @Produce text/plain
-// @Success 200 {string} string "Successfully generated python"
-// @Failure 400,401,500,503 {string} string "Error occurred"
-// @Router /python [post]
 func (h *Handler) GeneratePython(c *fiber.Ctx) error {
 	resp, err := http.DefaultClient.Post("http://localhost:8000/api/generate", "text/plain", bytes.NewReader(c.BodyRaw()))
 	if err != nil {
@@ -78,5 +68,7 @@ func (h *Handler) GeneratePython(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GeneratePythonHtml(c *fiber.Ctx) error {
-	return c.Render("actions", parser.ParseDocument(string(c.Body())))
+	doc := parser.ParseDocument(string(c.Body()))
+	doc.Provider = c.Query("provider")
+	return c.Render("actions", doc)
 }

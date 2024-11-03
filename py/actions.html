@@ -14,7 +14,8 @@ import requests
 
 from team_actions.src.registration import register_action
 
-
+from datetime import datetime
+from enum import Enum
 from typing import *
 from pydantic import *
 
@@ -27,12 +28,12 @@ authorization_data = {}
 {{.Types}}
 
 {{ .Models }}
-
+{{ $PROVIDER := .Provider }}
 {{ range .ApiCalls }}
 @register_action(
     system_type="task_tracker",
     include_in_plan=True,  # Действие может быть использовано в плане
-    signature="({{ range .Parameters }} {{ .Name }}: {{ .Type }} = None, {{ end }}) -> {{.FormatedReturn}}",
+    signature="({{ range .Parameters }} {{ .Name }}: {{ .TypeQuote }} = None, {{ end }}) -> {{.FormatedReturn}}",
     arguments=[
        {{ range .Parameters }}"{{ .Name }}",
        {{ end }}
@@ -40,16 +41,30 @@ authorization_data = {}
     description="{{.Description}}",
 )
 def {{.Name}}(
-    {{ range .Parameters }}{{ .Name }}: {{ .Type }} = None,
+    {{ range .Parameters }}{{ .Name }}: {{ .TypeHtml }} = None,
     {{ end }}
-) -> {{.FormatedReturn}}:
+) {{if ne .FormatedReturn "" }} -> {{.FormatedReturn}}{{end}}:
     # Логика вызова API Todoist для создания задачи
     response = requests.post(
-        "https://our_back/provider/{{.Name}}",
-        headers={"Authorization": f"Bearer {authorization_data['Todoist']}"},
+         {{if eq .Type "custom"}}
+        "https://our_back/{{$PROVIDER}}/handler",
+        {{ else }}
+         "https://our_back/{{$PROVIDER}}/{{.Name}}",
+        {{ end }}
+        headers={"Authorization": f"Bearer {authorization_data['{{$PROVIDER}}']}"},
         json={
+            {{if eq .Type "custom"}}
+            "action": "{{.Name}}",
+            "query": "{" + f"{{.QueryParameters}}" + "}",
+            "body": "{" + f"{{.BodyParameters}}" + "}",
+            "path": "{" + f"{{.PathParameters}}" + "}",
+            "method": "{{.Method}}",
+            "url": "{{.Url}}"
+            {{else}}
             {{ range .Parameters }}"{{ .Name }}": {{ .Name }},
             {{ end }}
+            {{end}}
+
         },
     )
     response.raise_for_status()

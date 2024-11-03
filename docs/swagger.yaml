@@ -49,8 +49,13 @@ paths:
     post:
       consumes:
       - text/plain
-      description: Generate python
+      description: Parse swagger to doc and python
       parameters:
+      - description: Provider name
+        in: query
+        name: provider
+        required: true
+        type: string
       - description: Input text data
         in: body
         name: data
@@ -80,7 +85,7 @@ paths:
           description: Error occurred
           schema:
             type: string
-      summary: Generate python
+      summary: Parse swagger to doc and python
       tags:
       - service
 swagger: "2.0"

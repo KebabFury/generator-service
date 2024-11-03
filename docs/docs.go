@@ -64,7 +64,7 @@ const docTemplate = `{
         },
         "/python": {
             "post": {
-                "description": "Generate python",
+                "description": "Parse swagger to doc and python",
                 "consumes": [
                     "text/plain"
                 ],
@@ -74,8 +74,15 @@ const docTemplate = `{
                 "tags": [
                     "service"
                 ],
-                "summary": "Generate python",
+                "summary": "Parse swagger to doc and python",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider name",
+                        "name": "provider",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "description": "Input text data",
                         "name": "data",
