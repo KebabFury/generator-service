@@ -23,6 +23,9 @@ func DocumentToMarkdown(doc *Document) string {
 			markdown += "**Parameters**:\n"
 		}
 		for _, parameter := range call.Parameters {
+			if parameter.Name == "" || parameter.Type == "" {
+				continue
+			}
 			markdown += fmt.Sprintf("- %s (%s): /%s/ %s \n", parameter.Name, parameter.Type, parameter.In, parameter.Description)
 		}
 
@@ -33,6 +36,9 @@ func DocumentToMarkdown(doc *Document) string {
 		}
 
 		for _, parameter := range call.Returns {
+			if parameter.Name == "" || parameter.Type == "" {
+				continue
+			}
 			markdown += fmt.Sprintf("- %s (%s)\n", parameter.Name, parameter.Type)
 		}
 

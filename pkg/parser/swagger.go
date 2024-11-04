@@ -129,7 +129,7 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 
 			apiCall := ApiCall{
 				Type:   ApiCallTypeCustom,
-				Url:    openapi3Spec.Servers[0].URL + path,
+				Url:    "" + path,
 				Method: method,
 			}
 			var annotations []Annotated
@@ -299,6 +299,10 @@ func parseAnnotated(operationId string, parameter *openapi3.Parameter) Annotated
 }
 
 func parseType(schema *openapi3.Schema) string {
+	if schema.Type == nil {
+		return "str"
+	}
+
 	schemaType := *schema.Type
 
 	switch schemaType[0] {
@@ -316,6 +320,7 @@ func parseType(schema *openapi3.Schema) string {
 }
 
 type Schema struct {
+	Ref   string
 	Props []Parameter
 }
 
@@ -388,6 +393,9 @@ func (s *SwaggerParser) ParseSchema(operationId string, required bool, parentPn 
 		description := ""
 		if schema.Value != nil {
 			description = strings.Trim(strconv.Quote(breaksRe.ReplaceAllString(schema.Value.Description, "")), "\"")
+		}
+
+		if strings.Split(schema.Ref, "/")[3] == "UserChangePermissionsDto" {
 		}
 		tmp.Props = append(tmp.Props, Parameter{Name: fixReservedWords(pn), Type: operationId + parentPn + caser.String(pn), Description: description})
 		schemas[operationId+parentPn] = tmp

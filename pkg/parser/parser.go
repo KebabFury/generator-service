@@ -79,7 +79,7 @@ func (p Parameter) TypeHtml() template.HTML {
 var argumentRe = regexp.MustCompile(`(?m)^-\s(.+)\s\((.+)\):\s(?:/([a-z]*)/)?.*`)
 var returnRe = regexp.MustCompile(`(?m)^-\s(.+)\s\((.+)\)`)
 var typeHintsRe = regexp.MustCompile(`(?mU)# TypeHints Definition\n((?:.|\n)*)#`)
-var modelsRe = regexp.MustCompile(`(?mU)# Models definition\n((?:.|\n)*)#`)
+var modelsRe = regexp.MustCompile(`(?mU)# Models definition((?:.|\n)*)# API Calls Documentation`)
 
 func ParseDocument(documentStr string) *Document {
 	document := &Document{}
