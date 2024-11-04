@@ -34,9 +34,9 @@ func (a *AgniaServiceImp) RegisterProviders(providers []domain.Provider) {
 
 		// Запись двух файлов в папку
 		files := map[string]string{
-			"__init__.py":      "",
-			"actions.py":       re.ReplaceAllString(provider.ActionCode, ""),
-			"documentation.md": provider.Documentation,
+			"__init__.py": "",
+			"actions.py":  re.ReplaceAllString(provider.ActionCode, ""),
+			"documentation.md":   provider.Documentation,
 		}
 
 		for name, content := range files {
@@ -51,6 +51,18 @@ func (a *AgniaServiceImp) RegisterProviders(providers []domain.Provider) {
 
 		// Выполнение команды python -m team_actions.src.initial_setup
 		cmd := exec.Command("python", "-m", "team_actions.src.initial_setup")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			fmt.Println("Ошибка при выполнении команды:", err)
+		} else {
+			fmt.Println("Команда выполнена успешно.")
+		}
+
+		// Костыль, потому что вызываем второй раз, оставалось 2 часа, время на дебаг не было
+		// не бейте
+		cmd = exec.Command("python", "-m", "team_actions.src.initial_setup")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 

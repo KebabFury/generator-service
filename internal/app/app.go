@@ -30,7 +30,7 @@ func Run() {
 		l.Info().Err(err).Msg("cannot load config")
 	}
 
-	engine := html.New("./py", ".html")
+	engine := html.New("./templates", ".html")
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})

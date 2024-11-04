@@ -23,6 +23,7 @@ func NewHandler(services *services.Services) *Handler {
 
 func (h *Handler) Init(app *fiber.App) {
 	app.Use(cors.New())
+	app.Get("ui", h.Ui)
 	api := app.Group("/api")
 	api.Get("/swagger/*", swagger.HandlerDefault) // default
 
@@ -32,6 +33,10 @@ func (h *Handler) Init(app *fiber.App) {
 	api.Post("/register", h.RegisterProvider)
 	api.Post("/parse/body", h.ParseFromBody)
 
+}
+
+func (h *Handler) Ui(c *fiber.Ctx) error {
+	return c.Render("ui", fiber.Map{})
 }
 
 // Ping
