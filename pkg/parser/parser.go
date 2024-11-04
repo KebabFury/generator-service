@@ -31,34 +31,34 @@ type ApiCall struct {
 	FormatedReturn string      `json:"formated_return,omitempty"`
 }
 
-func (c ApiCall) PathParameters() template.HTML {
+func (c ApiCall) PathParameters() string {
 	var s []string
 	for _, param := range c.Parameters {
 		if param.In == "path" {
 			s = append(s, fmt.Sprintf(`\"%s\": {%s}`, param.Name, param.Name))
 		}
 	}
-	return template.HTML(strings.Join(s, ", "))
+	return strings.Join(s, ", ")
 }
 
-func (c ApiCall) BodyParameters() template.HTML {
+func (c ApiCall) BodyParameters() string {
 	var s []string
 	for _, param := range c.Parameters {
 		if param.In == "body" {
 			s = append(s, fmt.Sprintf(`\"%s\": {%s}`, param.Name, param.Name))
 		}
 	}
-	return template.HTML(strings.Join(s, ", "))
+	return strings.Join(s, ", ")
 }
 
-func (c ApiCall) QueryParameters() template.HTML {
+func (c ApiCall) QueryParameters() string {
 	var s []string
 	for _, param := range c.Parameters {
 		if param.In == "query" {
 			s = append(s, fmt.Sprintf(`\"%s\": {%s}`, param.Name, param.Name))
 		}
 	}
-	return template.HTML(strings.Join(s, ", "))
+	return strings.Join(s, ", ")
 }
 
 type Parameter struct {
