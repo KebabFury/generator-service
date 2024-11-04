@@ -100,7 +100,10 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	})
 
 	schemas := s.ParseSchemaMap(pythonFileContent)
-	initialSchemas := schemas
+	initialSchemas := map[string]Schema{}
+	for k, v := range schemas {
+		initialSchemas[k] = v
+	}
 	parseDocument := Document{}
 	for path, pathItem := range openapi3Spec.Paths.Map() {
 
@@ -162,7 +165,7 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	keys := make([]string, 0, len(schemas))
 
 	for k := range schemas {
-		if _, ok := initialSchemas[k]; !ok {
+		if _, ok := initialSchemas[k]; ok || k == "" {
 			continue
 		}
 		keys = append(keys, k)
