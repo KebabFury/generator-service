@@ -372,25 +372,9 @@ func (s *SwaggerParser) ParseResponse(operationId string, parsedSchemas map[stri
 		return []Parameter{}
 	}
 
-	if content.Schema.Ref != "" {
-		schemaName := strings.Split(content.Schema.Ref, "/")[3]
-		return []Parameter{
-			{Name: schemaName, Type: schemaName},
-		}
-	}
-	if content.Schema.Value.Type == nil {
-		return []Parameter{}
-	}
-	types := *content.Schema.Value.Type
-	switch types[0] {
-	case "array":
-		schemaName := strings.Split(content.Schema.Value.Items.Ref, "/")[3]
-		return []Parameter{
-			{Name: schemaName, Type: "List[" + schemaName + "]"},
-		}
-	}
+	s.ParseSchema(operationId, false, "", "Response", content.Schema, parsedSchemas)
 
-	return []Parameter{}
+	return parsedSchemas[operationId+"Response"].Props
 }
 
 var caser = cases.Title(language.Und)
