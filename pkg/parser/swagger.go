@@ -30,6 +30,7 @@ func NewSwaggerParser() *SwaggerParser {
 }
 
 var swaggerRe = regexp.MustCompile(`(?m)"swagger":\s?"2\.0"`)
+var specPathSymbols = regexp.MustCompile(`(?m)[/{}]`)
 
 func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	semaphore <- struct{}{}
@@ -122,6 +123,10 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 		}
 
 		for method, operation := range operations {
+			if operation.OperationID == "" {
+				operation.OperationID = method + specPathSymbols.ReplaceAllString(path, "")
+			}
+
 			apiCall := ApiCall{
 				Type:   ApiCallTypeCustom,
 				Url:    openapi3Spec.Servers[0].URL + path,
