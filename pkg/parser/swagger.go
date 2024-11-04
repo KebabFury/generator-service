@@ -170,7 +170,7 @@ func (s *SwaggerParser) Parse(swaggerFile []byte) *Document {
 	keys := make([]string, 0, len(schemas))
 
 	for k := range schemas {
-		if _, ok := initialSchemas[k]; ok || k == "" {
+		if _, ok := initialSchemas[k]; ok {
 			continue
 		}
 		keys = append(keys, k)
@@ -372,9 +372,25 @@ func (s *SwaggerParser) ParseResponse(operationId string, parsedSchemas map[stri
 		return []Parameter{}
 	}
 
-	s.ParseSchema(operationId, false, "", "Response", content.Schema, parsedSchemas)
+	if content.Schema.Ref != "" {
+		schemaName := strings.Split(content.Schema.Ref, "/")[3]
+		return []Parameter{
+			{Name: schemaName, Type: schemaName},
+		}
+	}
+	if content.Schema.Value.Type == nil {
+		return []Parameter{}
+	}
+	types := *content.Schema.Value.Type
+	switch types[0] {
+	case "array":
+		schemaName := strings.Split(content.Schema.Value.Items.Ref, "/")[3]
+		return []Parameter{
+			{Name: schemaName, Type: "List[" + schemaName + "]"},
+		}
+	}
 
-	return parsedSchemas[operationId+"Response"].Props
+	return []Parameter{}
 }
 
 var caser = cases.Title(language.Und)
